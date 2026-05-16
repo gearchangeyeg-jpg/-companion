@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="コンパニオン管理">
+<meta name="theme-color" content="#534AB7">
+<title>コンパニオン管理</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f5f5f7;--card:#fff;--border:#e5e5e5;
+  --text:#1a1a1a;--text2:#666;--text3:#999;
+  --purple:#534AB7;--purple-light:#EEEDFE;--purple-dark:#3C3489;
+  --green:#1D9E75;--green-light:#E1F5EE;
+  --orange:#BA7517;--orange-light:#FAEEDA;
+  --red:#D4537E;--red-light:#FBEAF0;
+  --blue:#378ADD;--blue-light:#E6F1FB;
+}
+html,body{height:100%;overflow:hidden;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:var(--bg);color:var(--text);}
+#app{display:flex;flex-direction:column;height:100dvh;max-width:430px;margin:0 auto;background:var(--bg);}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;padding-top:calc(12px + env(safe-area-inset-top));}
+.topbar h1{font-size:17px;font-weight:600;}
+.topbar button{background:none;border:none;font-size:24px;cursor:pointer;padding:4px;line-height:1;}
+.syncbar{background:var(--purple-light);color:var(--purple-dark);font-size:11px;padding:4px 16px;flex-shrink:0;}
+.pages{flex:1;overflow:hidden;position:relative;}
+.page{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;padding:12px 16px;gap:10px;flex-direction:column;}
+.page.active{display:flex;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.statcard{background:var(--card);border-radius:12px;padding:12px 14px;border:1px solid var(--border);}
+.statcard .lbl{font-size:11px;color:var(--text2);margin-bottom:4px;}
+.statcard .val{font-size:22px;font-weight:700;}
+.statcard .sub{font-size:10px;margin-top:2px;}
+.sec-title{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.06em;margin-top:4px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;}
+.item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.item:last-child{border-bottom:none;}
+.item-main{font-size:14px;font-weight:500;}
+.item-sub{font-size:11px;color:var(--text2);margin-top:2px;}
+.badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;}
+.badge-green{background:var(--green-light);color:var(--green);}
+.badge-orange{background:var(--orange-light);color:var(--orange);}
+.badge-red{background:var(--red-light);color:var(--red);}
+.badge-blue{background:var(--blue-light);color:var(--blue);}
+.badge-purple{background:var(--purple-light);color:var(--purple-dark);}
+.btn-primary{background:var(--purple);color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-secondary{background:none;border:1px solid var(--border);border-radius:12px;padding:12px;font-size:14px;font-family:inherit;cursor:pointer;width:100%;color:var(--text2);}
+.bnav{display:flex;border-top:1px solid var(--border);background:var(--card);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom);}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 0 8px;gap:3px;background:none;border:none;cursor:pointer;font-family:inherit;}
+.bnav-btn i{font-size:22px;color:var(--text3);}
+.bnav-btn span{font-size:9px;color:var(--text3);}
+.bnav-btn.active i,.bnav-btn.active span{color:var(--purple);}
+.form-group{display:flex;flex-direction:column;gap:4px;}
+.form-group label{font-size:12px;font-weight:600;color:var(--text2);}
+.form-group input,.form-group select,.form-group textarea{padding:11px 12px;font-size:14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;background:var(--card);color:var(--text);-webkit-appearance:none;}
+.form-group textarea{resize:none;height:60px;}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+.chip{padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);font-size:12px;cursor:pointer;font-family:inherit;color:var(--text2);}
+.chip.active{background:var(--purple-light);border-color:var(--purple);color:var(--purple-dark);font-weight:700;}
+.detail{display:none;padding:8px 0 4px;border-top:1px solid var(--border);margin-top:4px;}
+.detail.open{display:block;}
+.detail-info{font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.7;}
+.detail-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.detail-btn{font-size:11px;font-weight:700;padding:6px 12px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#111;color:#fff;font-size:13px;padding:10px 20px;border-radius:24px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;white-space:nowrap;}
+.toast.show{opacity:1;}
+.empty{text-align:center;padding:24px;color:var(--text3);font-size:13px;}
+.av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+.nc{display:flex;align-items:center;gap:10px;}
+.prog{height:5px;background:var(--bg);border-radius:3px;overflow:hidden;margin-top:4px;}
+.prog-fill{height:100%;border-radius:3px;}
+.order-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.order-item:last-child{border-bottom:none;}
+.group-title{font-size:12px;font-weight:700;color:var(--text);margin:4px 0 2px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <h1 id="page-title">✨ コンパニオン管理</h1>
+    <button onclick="showForm('booking')" aria-label="新規">＋</button>
+  </div>
+  <div class="syncbar" id="syncbar">📱 スマホ内に保存中</div>
+
+  <div class="pages">
+    <!-- ホーム -->
+    <div class="page active" id="page-home">
+      <div class="row2">
+        <div class="statcard"><div class="lbl">📅 今月予約</div><div class="val" id="st-booking">0件</div></div>
+        <div class="statcard"><div class="lbl">💴 今月売上</div><div class="val" id="st-sales">¥0</div></div>
+        <div class="statcard"><div class="lbl">👩 稼働中</div><div class="val" id="st-staff">0名</div></div>
+        <div class="statcard"><div class="lbl">⏳ 返事待ち</div><div class="val" id="st-wait">0件</div><div class="sub" id="st-wait-sub"></div></div>
+      </div>
+      <div class="sec-title">直近の予約</div>
+      <div class="card" id="home-bookings"><div class="empty">＋ から予約を登録しましょう</div></div>
+      <div class="sec-title">返事待ちオーダー</div>
+      <div class="card" id="home-waiting"><div class="empty" style="color:var(--green)">✅ 返事待ちなし</div></div>
+    </div>
+
+    <!-- 予約 -->
+    <div class="page" id="page-booking">
+      <button class="btn-primary" onclick="showForm('booking')"><i class="ti ti-plus"></i> 新規予約を登録</button>
+      <div class="sec-title">予約一覧</div>
+      <div class="card" id="list-booking"><div class="empty">まだ予約がありません</div></div>
+    </div>
+
+    <!-- オーダー -->
+    <div class="page" id="page-order">
+      <button class="btn-primary" onclick="showForm('order')"><i class="ti ti-send"></i> 新規オーダーを打診</button>
+      <div class="sec-title">打診履歴</div>
+      <div class="card" id="list-order"><div class="empty">まだ打診履歴がありません</div></div>
+    </div>
+
+    <!-- スタッフ -->
+    <div class="page" id="page-staff">
+      <button class="btn-primary" onclick="showForm('staff')"><i class="ti ti-plus"></i> スタッフを追加</button>
+      <div class="sec-title">スタッフ一覧</div>
+      <div class="card" id="list-staff"><div class="empty">スタッフを追加してください</div></div>
+      <div class="sec-title">今月の稼働数</div>
+      <div class="card" id="list-prog"><div class="empty">データなし</div></div>
+    </div>
+
+    <!-- フォーム -->
+    <div class="page" id="page-form">
+      <!-- 予約フォーム -->
+      <div id="form-booking" style="display:none;flex-direction:column;gap:10px;">
+        <div style="font-size:16px;font-weight:700">新規予約登録</div>
+        <div class="form-group"><label>依頼主</label><input id="f-client" type="text" placeholder="例：山田商事 / 鈴木様"></div>
+        <div class="row2">
+          <div class="form-group"><label>開始日時</label><input id="f-start" type="datetime-local"></div>
+          <div class="form-group"><label>終了予定</label><input id="f-end" type="time"></div>
+        </div>
+        <div class="form-group"><label>会場</label><input id="f-venue" type="text" placeholder="例：ホテルグランド"></div>
+        <div class="row2">
+          <div class="form-group"><label>人数</label><input id="f-count" type="number" placeholder="3" min="1"></div>
+          <div class="form-group"><label>基本料金(円)</label><input id="f-price" type="number" placeholder="90000"></div>
+        </div>
+        <div class="form-group"><label>状態</label>
+          <div class="chips" id="chips-status">
+            <button class="chip active" onclick="pickChip('chips-status',this)">確定</button>
+            <button class="chip" onclick="pickChip('chips-status',this)">仮押さえ</button>
+            <button class="chip" onclick="pickChip('chips-status',this)">交渉中</button>
+          </div>
+        </div>
+        <div class="form-group"><label>メモ</label><textarea id="f-memo" placeholder="備考など"></textarea></div>
+        <button class="btn-primary" onclick="submitBooking()">登録する</button>
+        <button class="btn-secondary" onclick="closeForm()">キャンセル</button>
+      </div>
+
+      <!-- オーダーフォーム -->
+      <div id="form-order" style="display:none;flex-direction:column;gap:10px;">
+        <div style="font-size:16px;font-weight:700">オーダー打診</div>
+        <div class="form-group"><label>予約</label><select id="o-bid"></select></div>
+        <div class="form-group"><label>スタッフ</label><select id="o-staff"></select></div>
+        <div class="form-group"><label>打診方法</label>
+          <div class="chips" id="chips-method">
+            <button class="chip active" onclick="pickChip('chips-method',this)">LINE</button>
+            <button class="chip" onclick="pickChip('chips-method',this)">電話</button>
+            <button class="chip" onclick="pickChip('chips-method',this)">SMS</button>
+          </div>
+        </div>
+        <div class="form-group"><label>返答期限</label><input id="o-deadline" type="datetime-local"></div>
+        <div class="form-group"><label>返答結果</label>
+          <div class="chips" id="chips-result">
+            <button class="chip active" onclick="pickChip('chips-result',this)">返事待ち</button>
+            <button class="chip" onclick="pickChip('chips-result',this)">OK</button>
+            <button class="chip" onclick="pickChip('chips-result',this)">NG</button>
+          </div>
+        </div>
+        <div class="form-group"><label>断り理由（NG時）</label><input id="o-reason" type="text" placeholder="例：先約あり"></div>
+        <button class="btn-primary" onclick="submitOrder()">打診を記録</button>
+        <button class="btn-secondary" onclick="closeForm()">キャンセル</button>
+      </div>
+
+      <!-- 延長フォーム -->
+      <div id="form-extend" style="display:none;flex-direction:column;gap:10px;">
+        <div style="font-size:16px;font-weight:700">延長記録</div>
+        <div class="form-group"><label>予約</label><select id="e-bid"></select></div>
+        <div class="form-group"><label>スタッフ</label><select id="e-staff"></select></div>
+        <div class="form-group"><label>実際の終了時刻</label><input id="e-end" type="time"></div>
+        <div class="form-group"><label>延長時間</label>
+          <div class="chips" id="chips-ext">
+            <button class="chip" onclick="pickExt(this,30)">+30分</button>
+            <button class="chip" onclick="pickExt(this,60)">+60分</button>
+            <button class="chip" onclick="pickExt(this,90)">+90分</button>
+            <button class="chip" onclick="pickExt(this,120)">+120分</button>
+          </div>
+        </div>
+        <div class="form-group"><label>単価(円/30分)</label><input id="e-rate" type="number" value="5000" oninput="calcExt()"></div>
+        <div style="background:var(--bg);border-radius:10px;padding:12px;">
+          <div style="font-size:11px;color:var(--text2)">延長料金（自動計算）</div>
+          <div style="font-size:22px;font-weight:700;margin-top:4px" id="ext-result">¥0</div>
+        </div>
+        <button class="btn-primary" onclick="submitExtend()">記録する</button>
+        <button class="btn-secondary" onclick="closeForm()">キャンセル</button>
+      </div>
+
+      <!-- 交通費フォーム -->
+      <div id="form-transport" style="display:none;flex-direction:column;gap:10px;">
+        <div style="font-size:16px;font-weight:700">交通費入力</div>
+        <div class="form-group"><label>予約</label><select id="t-bid"></select></div>
+        <div class="form-group"><label>スタッフ</label><select id="t-staff"></select></div>
+        <div class="form-group"><label>交通手段</label>
+          <div class="chips" id="chips-trans">
+            <button class="chip active" onclick="pickChip('chips-trans',this)">電車</button>
+            <button class="chip" onclick="pickChip('chips-trans',this)">タクシー</button>
+            <button class="chip" onclick="pickChip('chips-trans',this)">バス</button>
+            <button class="chip" onclick="pickChip('chips-trans',this)">その他</button>
+          </div>
+        </div>
+        <div class="form-group"><label>実費(円)</label><input id="t-amount" type="number" placeholder="1500"></div>
+        <div class="form-group"><label>備考</label><input id="t-memo" type="text" placeholder="例：遠方・深夜割増"></div>
+        <div class="form-group"><label>精算</label>
+          <div class="chips" id="chips-paid">
+            <button class="chip active" onclick="pickChip('chips-paid',this)">未精算</button>
+            <button class="chip" onclick="pickChip('chips-paid',this)">精算済み</button>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="submitTransport()">記録する</button>
+        <button class="btn-secondary" onclick="closeForm()">キャンセル</button>
+      </div>
+
+      <!-- スタッフフォーム -->
+      <div id="form-staff" style="display:none;flex-direction:column;gap:10px;">
+        <div style="font-size:16px;font-weight:700">スタッフ追加</div>
+        <div class="form-group"><label>名前</label><input id="s-name" type="text" placeholder="例：佐藤 りな"></div>
+        <div class="form-group"><label>電話番号</label><input id="s-tel" type="tel" placeholder="090-xxxx-xxxx"></div>
+        <div class="form-group"><label>基本単価(円/件)</label><input id="s-rate" type="number" placeholder="8000"></div>
+        <div class="form-group"><label>状態</label>
+          <div class="chips" id="chips-state">
+            <button class="chip active" onclick="pickChip('chips-state',this)">稼働中</button>
+            <button class="chip" onclick="pickChip('chips-state',this)">休暇中</button>
+            <button class="chip" onclick="pickChip('chips-state',this)">引退</button>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="submitStaff()">追加する</button>
+        <button class="btn-secondary" onclick="closeForm()">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bnav">
+    <button class="bnav-btn active" id="nav-home" onclick="goPage('home')"><i class="ti ti-home"></i><span>ホーム</span></button>
+    <button class="bnav-btn" id="nav-booking" onclick="goPage('booking')"><i class="ti ti-calendar"></i><span>予約</span></button>
+    <button class="bnav-btn" id="nav-order" onclick="goPage('order')"><i class="ti ti-send"></i><span>オーダー</span></button>
+    <button class="bnav-btn" id="nav-staff" onclick="goPage('staff')"><i class="ti ti-users"></i><span>スタッフ</span></button>
+  </nav>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var DB={bookings:[],orders:[],staff:[]};
+var curPage='home', prevPage='home', extMins=0;
+var avColors=[{bg:'#EEEDFE',fg:'#3C3489'},{bg:'#E1F5EE',fg:'#085041'},{bg:'#FAEEDA',fg:'#633806'},{bg:'#FBEAF0',fg:'#72243E'},{bg:'#E6F1FB',fg:'#0C447C'},{bg:'#FAECE7',fg:'#712B13'}];
+var barColors=['#534AB7','#1D9E75','#BA7517','#D4537E','#378ADD'];
+
+function save(){localStorage.setItem('cpdb',JSON.stringify(DB));}
+function load(){var d=localStorage.getItem('cpdb');if(d)try{DB=JSON.parse(d);}catch(e){}render();}
+function uid(){return Date.now().toString(36);}
+function av(n,i){var c=avColors[i%avColors.length];return '<div class="av" style="background:'+c.bg+';color:'+c.fg+'">'+(n||'?')[0]+'</div>';}
+function badge(s){if(s==='確定'||s==='OK')return '<span class="badge badge-green">'+s+'</span>';if(s==='仮押さえ'||s==='返事待ち')return '<span class="badge badge-orange">'+s+'</span>';if(s==='NG'||s==='キャンセル')return '<span class="badge badge-red">'+s+'</span>';if(s==='交渉中')return '<span class="badge badge-blue">'+s+'</span>';return '<span class="badge badge-purple">'+s+'</span>';}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2200);}
+function chipVal(id){var c=document.querySelector('#'+id+' .chip.active');return c?c.textContent:'';}
+function pickChip(id,el){document.querySelectorAll('#'+id+' .chip').forEach(function(c){c.classList.remove('active');});el.classList.add('active');}
+function pickExt(el,m){document.querySelectorAll('#chips-ext .chip').forEach(function(c){c.classList.remove('active');});el.classList.add('active');extMins=m;calcExt();}
+function calcExt(){var r=parseInt(document.getElementById('e-rate').value)||5000;document.getElementById('ext-result').textContent='¥'+((extMins/30)*r).toLocaleString();}
+
+function goPage(name){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.bnav-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('page-'+name).classList.add('active');
+  var nb=document.getElementById('nav-'+name);
+  if(nb)nb.classList.add('active');
+  var titles={home:'✨ コンパニオン管理',booking:'📅 予約管理',order:'📞 オーダー管理',staff:'👩 スタッフ管理'};
+  document.getElementById('page-title').textContent=titles[name]||'';
+  prevPage=curPage;curPage=name;
+}
+
+function showForm(type,bid){
+  prevPage=curPage;
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.bnav-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('page-form').classList.add('active');
+  document.getElementById('page-title').textContent='入力フォーム';
+  curPage='form';
+  ['booking','order','extend','transport','staff'].forEach(function(f){
+    var el=document.getElementById('form-'+f);
+    el.style.display='none';
+  });
+  document.getElementById('form-'+type).style.display='flex';
+  var bkOpts=DB.bookings.map(function(b){return '<option value="'+b.id+'">'+b.id+' '+b.client+'</option>';}).join('')||'<option>（予約なし）</option>';
+  var stOpts=DB.staff.map(function(s){return '<option>'+s.name+'</option>';}).join('')||'<option>（スタッフなし）</option>';
+  ['o-bid','e-bid','t-bid'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML=bkOpts;});
+  ['o-staff','e-staff','t-staff'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML=stOpts;});
+  if(bid){['o-bid','e-bid','t-bid'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=bid;});}
+  extMins=0;
+  var er=document.getElementById('ext-result');if(er)er.textContent='¥0';
+  document.querySelectorAll('#chips-ext .chip').forEach(function(c){c.classList.remove('active');});
+}
+
+function closeForm(){goPage(prevPage||'home');}
+
+function submitBooking(){
+  var c=document.getElementById('f-client').value;
+  if(!c){toast('依頼主を入力してください');return;}
+  var b={id:'YY-'+uid(),client:c,startTime:document.getElementById('f-start').value,endTime:document.getElementById('f-end').value,venue:document.getElementById('f-venue').value,count:document.getElementById('f-count').value,price:Number(document.getElementById('f-price').value)||0,status:chipVal('chips-status')||'確定',memo:document.getElementById('f-memo').value,extFee:0,transFee:0};
+  DB.bookings.push(b);save();toast('予約登録しました！ '+b.id);closeForm();render();
+}
+function submitOrder(){
+  var bid=document.getElementById('o-bid').value;
+  if(!bid){toast('予約を選んでください');return;}
+  var o={bookingId:bid,staffName:document.getElementById('o-staff').value,method:chipVal('chips-method'),deadline:document.getElementById('o-deadline').value,result:chipVal('chips-result')||'返事待ち',reason:document.getElementById('o-reason').value,time:new Date().toLocaleString('ja-JP')};
+  DB.orders.push(o);save();toast('オーダーを記録しました');closeForm();render();
+}
+function submitExtend(){
+  var bid=document.getElementById('e-bid').value;
+  if(!bid){toast('予約を選んでください');return;}
+  if(!extMins){toast('延長時間を選んでください');return;}
+  var r=parseInt(document.getElementById('e-rate').value)||5000;
+  var fee=(extMins/30)*r;
+  var bk=DB.bookings.find(function(b){return b.id===bid;});
+  if(bk)bk.extFee=(bk.extFee||0)+fee;
+  save();toast('延長料金 ¥'+fee.toLocaleString()+' を記録');closeForm();render();
+}
+function submitTransport(){
+  var bid=document.getElementById('t-bid').value;
+  if(!bid){toast('予約を選んでください');return;}
+  var amt=Number(document.getElementById('t-amount').value)||0;
+  var bk=DB.bookings.find(function(b){return b.id===bid;});
+  if(bk)bk.transFee=(bk.transFee||0)+amt;
+  save();toast('交通費 ¥'+amt.toLocaleString()+' を記録');closeForm();render();
+}
+function submitStaff(){
+  var n=document.getElementById('s-name').value;
+  if(!n){toast('名前を入力してください');return;}
+  DB.staff.push({name:n,tel:document.getElementById('s-tel').value,rate:Number(document.getElementById('s-rate').value)||8000,state:chipVal('chips-state')||'稼働中'});
+  save();toast(n+'を追加しました');closeForm();render();
+}
+
+function render(){renderStats();renderHomeBookings();renderHomeWaiting();renderBookingList();renderOrderList();renderStaffList();}
+
+function renderStats(){
+  var conf=DB.bookings.filter(function(b){return b.status==='確定';});
+  var sales=conf.reduce(function(s,b){return s+b.price+(b.extFee||0)+(b.transFee||0);},0);
+  var wait=DB.orders.filter(function(o){return o.result==='返事待ち';});
+  var active=DB.staff.filter(function(s){return s.state==='稼働中';});
+  document.getElementById('st-booking').textContent=conf.length+'件';
+  document.getElementById('st-sales').textContent=sales>=1000?'¥'+(sales/1000).toFixed(0)+'K':'¥'+sales.toLocaleString();
+  document.getElementById('st-staff').textContent=active.length+'名';
+  document.getElementById('st-wait').textContent=wait.length+'件';
+  var sub=document.getElementById('st-wait-sub');
+  sub.textContent=wait.length>0?'要フォロー':'問題なし';
+  sub.style.color=wait.length>0?'var(--orange)':'var(--green)';
+}
+
+function renderHomeBookings(){
+  var el=document.getElementById('home-bookings');
+  var bk=DB.bookings.slice(-4).reverse();
+  if(!bk.length){el.innerHTML='<div class="empty">＋ から予約を登録しましょう</div>';return;}
+  el.innerHTML=bk.map(function(b){return '<div class="item"><div><div class="item-main">'+b.client+'</div><div class="item-sub">'+(b.startTime||'日時未定')+(b.count?' · '+b.count+'名':'')+'</div></div>'+badge(b.status)+'</div>';}).join('');
+}
+
+function renderHomeWaiting(){
+  var el=document.getElementById('home-waiting');
+  var wait=DB.orders.filter(function(o){return o.result==='返事待ち';});
+  if(!wait.length){el.innerHTML='<div class="empty" style="color:var(--green)">✅ 返事待ちなし</div>';return;}
+  el.innerHTML=wait.map(function(o,i){return '<div class="order-item"><div class="nc">'+av(o.staffName,i)+'<div><div class="item-main" style="font-size:13px">'+o.staffName+'</div><div class="item-sub">'+o.bookingId+' · 期限:'+(o.deadline||'未設定')+'</div></div></div>'+badge('返事待ち')+'</div>';}).join('');
+}
+
+function renderBookingList(){
+  var el=document.getElementById('list-booking');
+  if(!DB.bookings.length){el.innerHTML='<div class="empty">まだ予約がありません</div>';return;}
+  el.innerHTML=DB.bookings.slice().reverse().map(function(b,i){
+    var id='det-'+i;
+    var total=b.price+(b.extFee||0)+(b.transFee||0);
+    return '<div class="item" onclick="toggleDetail(\''+id+'\')" style="flex-wrap:wrap;cursor:pointer;">'+
+      '<div style="flex:1;min-width:0"><div class="item-main">'+b.client+'</div><div class="item-sub">'+(b.startTime||'日時未定')+(b.count?' · '+b.count+'名':'')+'</div></div>'+
+      badge(b.status)+
+      '<div class="detail" id="'+id+'">'+
+        '<div class="detail-info">会場：'+(b.venue||'未定')+' / 合計：¥'+total.toLocaleString()+(b.extFee?' (延長+¥'+b.extFee.toLocaleString()+')')+(b.transFee?' (交通費+¥'+b.transFee.toLocaleString()+')')+'</div>'+
+        '<div class="detail-btns">'+
+          '<button class="detail-btn badge-purple" onclick="event.stopPropagation();showForm(\'order\',\''+b.id+'\')">📞 オーダー</button>'+
+          '<button class="detail-btn badge-green" onclick="event.stopPropagation();showForm(\'extend\',\''+b.id+'\')">⏱ 延長</button>'+
+          '<button class="detail-btn badge-blue" onclick="event.stopPropagation();showForm(\'transport\',\''+b.id+'\')">🚗 交通費</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function toggleDetail(id){document.getElementById(id).classList.toggle('open');}
+
+function renderOrderList(){
+  var el=document.getElementById('list-order');
+  if(!DB.orders.length){el.innerHTML='<div class="empty">まだ打診履歴がありません</div>';return;}
+  var grp={};
+  DB.orders.slice().reverse().forEach(function(o){if(!grp[o.bookingId])grp[o.bookingId]=[];grp[o.bookingId].push(o);});
+  el.innerHTML=Object.keys(grp).map(function(bid){
+    var bk=DB.bookings.find(function(b){return b.id===bid;});
+    return '<div class="group-title">'+bid+(bk?' '+bk.client:'')+'</div>'+
+      grp[bid].map(function(o,i){return '<div class="order-item"><div class="nc">'+av(o.staffName,i)+'<div><div class="item-main" style="font-size:13px">'+o.staffName+'</div><div class="item-sub">'+(o.reason||o.method||o.time||'')+'</div></div></div>'+badge(o.result)+'</div>';}).join('');
+  }).join('<div style="height:6px"></div>');
+}
+
+function renderStaffList(){
+  var el=document.getElementById('list-staff');
+  var ep=document.getElementById('list-prog');
+  if(!DB.staff.length){el.innerHTML='<div class="empty">スタッフを追加してください</div>';ep.innerHTML='';return;}
+  DB.staff.forEach(function(s){s.count=DB.orders.filter(function(o){return o.staffName===s.name&&o.result==='OK';}).length;});
+  el.innerHTML=DB.staff.map(function(s,i){return '<div class="item"><div class="nc">'+av(s.name,i)+'<div><div class="item-main">'+s.name+'</div><div class="item-sub">'+s.count+'件 · ¥'+(s.count*s.rate).toLocaleString()+' · '+s.tel+'</div></div></div>'+badge(s.state)+'</div>';}).join('');
+  var mx=Math.max.apply(null,DB.staff.map(function(s){return s.count||0;}));
+  ep.innerHTML='<div style="display:flex;flex-direction:column;gap:10px;font-size:12px;">'+
+    DB.staff.map(function(s,i){var p=mx>0?Math.round((s.count||0)/mx*100):0;return '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span>'+s.name+'</span><span style="color:var(--text2)">'+(s.count||0)+'件</span></div><div class="prog"><div class="prog-fill" style="width:'+p+'%;background:'+barColors[i%barColors.length]+'"></div></div></div>';}).join('')+
+  '</div>';
+}
+
+load();
+</script>
+</body>
+</html>
